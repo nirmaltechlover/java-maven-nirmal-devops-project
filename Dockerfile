@@ -4,7 +4,7 @@ FROM tomcat:9.0.118-jdk21
 
 #### cleaning of old webapps directory
 
-RUN rm -rf /usr/local/tomcat/webapps/*
+
 
 
 #### Then copy war directory to tomcat server
