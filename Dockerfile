@@ -1,6 +1,6 @@
 #### Base image tomcat with openjdk
 
-FROM tomcat:9.0.118-jdk21-temurin
+FROM tomcat:9.0.118-jdk21
 
 #### cleaning of old webapps directory
 
