@@ -80,6 +80,20 @@ pipeline {
                     
                 }
             }
+
+        
+    stage('Trivy Scan') {
+    steps {
+        sh '''
+        docker run --rm \
+        -v /var/run/docker.sock:/var/run/docker.sock \
+        aquasec/trivy image \
+        --exit-code 1 \
+        --severity HIGH,CRITICAL \
+        ${image_name}:${BUILD_ID}
+        '''
+    }
+}
             stage ('Image push to dockerhub') {
                 steps {
                     
