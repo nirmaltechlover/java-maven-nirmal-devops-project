@@ -105,6 +105,24 @@ pipeline {
                     
                 }
             }
+        stage('Update GitOps Repo') {
+            steps {
+                sh '''
+                git clone https://github.com/nirmaltechlover/java-maven-nirmal-devops-project_gitops_deployments_manifests.git
+                cd java-maven-nirmal-devops-project_gitops_deployments_manifests
+
+
+                sed -i "s/tag:.*/tag: \\"${BUILD_ID}\\"/" values.yaml
+
+                git config user.email "jenkins@example.com"
+                git config user.name "jenkins"
+
+                git add values.yaml
+                git commit -m "update image tag"
+                git push
+                '''
+            }
+        }
 
             }
 
