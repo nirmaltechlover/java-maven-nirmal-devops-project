@@ -106,23 +106,28 @@ pipeline {
                 }
             }
         stage('Update GitOps Repo') {
-            steps {
-                sh '''
-                git clone https://github.com/nirmaltechlover/java-maven-nirmal-devops-project_gitops_deployments_manifests.git
-                cd java-maven-nirmal-devops-project_gitops_deployments_manifests
+    steps {
+        withCredentials([string(credentialsId: 'github_cred', variable: 'GITHUB_TOKEN')]) {
+            sh '''
+                rm -rf gitops-repo
 
+                git clone https://nirmaltechlover:${GITHUB_TOKEN}@github.com/nirmaltechlover/java-maven-nirmal-devops-project_gitops_deployments_manifests.git gitops-repo
 
-                sed -i "s/tag:.*/tag: \\"${BUILD_ID}\\"/" values.yaml
+                cd gitops-repo
 
-                git config user.email "jenkins@example.com"
+                sed -i "s/tag:.*/tag: \\"${BUILD_NUMBER}\\"/" values.yaml
+
+                git config user.email "jenkins@nirmal.com"
                 git config user.name "jenkins"
 
                 git add values.yaml
-                git commit -m "update image tag"
-                git push
-                '''
-            }
+                git commit -m "Update image tag to ${BUILD_NUMBER}" || echo "No changes"
+
+                git push origin main
+            '''
         }
+    }
+}
 
             }
 
