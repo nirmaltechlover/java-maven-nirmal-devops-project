@@ -1,0 +1,5 @@
+aws_region    = "us-east-1"
+instance_type = "t3.small"
+key_name      = "devops"
+env_instance  = "dev_instance"
+ami_id        = "ami-091138d0f0d41ff90"
