@@ -216,6 +216,27 @@ resource "aws_instance" "nirmal_instance" {
 }
 
 
+resource "aws_instance" "ec2_instance" {
+
+  ami = var.ami_id
+
+  instance_type = var.instance_type
+
+  key_name = var.key_name
+
+  subnet_id = aws_subnet.nirmal_pubsubnet.id
+
+  vpc_security_group_ids = [aws_security_group.nirmal_sg.id]
+
+
+
+  tags = {
+
+    Name = var.env_instance
+
+  }
+
+}
 
 output "aws_ec2_ip" {
 
