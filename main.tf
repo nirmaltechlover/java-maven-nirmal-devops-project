@@ -232,7 +232,7 @@ resource "aws_instance" "ec2_instance" {
 
   tags = {
 
-    Name = var.env_instance
+    Name = "ec2_instance"
 
   }
 
