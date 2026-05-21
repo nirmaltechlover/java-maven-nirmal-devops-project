@@ -171,11 +171,11 @@ resource "aws_security_group" "nirmal_sg" {
   }
   ingress {
 
-    description = "HTTPS access"
+    description = "full_access"
 
-    from_port = 443
-    to_port   = 443
-    protocol  = "tcp"
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
 
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -189,58 +189,122 @@ resource "aws_security_group" "nirmal_sg" {
 
 }
 
+##########AWS_IAM_ROLE###########
+resource "aws_iam_role" "aws_eks_cluster" {
 
+    name = "aws_eks_role"
 
+    assume_role_policy = jsonencode({
 
+        Version = "2012-10-17"
 
-resource "aws_instance" "nirmal_instance" {
+        Statement = [{
 
-  ami = var.ami_id
+        Action =   "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+            Service = "eks.amazonaws.com"
+        }
 
-  instance_type = var.instance_type
+        }]
+       
 
-  key_name = var.key_name
+    })  
+}
 
-  subnet_id = aws_subnet.nirmal_pubsubnet.id
+####AWS_IAM_ROLE_POLICY_ATTACHMENT#############
+resource "aws_iam_role_policy_attachment" "aws_eks_cluster_policy" {
 
-  vpc_security_group_ids = [aws_security_group.nirmal_sg.id]
+      role = aws_iam_role.aws_eks_cluster.name
+      policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+  
+}
 
+########AWS_IAM_NODE_GROUP_ROLE###############
+resource "aws_iam_role" "node_group_role" {
+    name = "node_group_role"
+    assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+        Effect = "Allow"
 
+        Principal = {
+            Service = "ec2.amazonaws.com"
+        }
 
-  tags = {
+        Action = "sts:AssumeRole"
+    }]
 
-    Name = var.env_instance
+    }) 
+  
+}
 
-  }
+####AWS_IAM_ROLE_POLICY_ATTACHMENT#############
+
+resource "aws_iam_role_policy_attachment" "node_policy_attachment" {
+
+    role = aws_iam_role.node_group_role.name
+    policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+}
+
+############AWS_NODE_GROUP################
+resource "aws_eks_node_group" "aws_eks_node_group" {
+
+    cluster_name = aws_eks_cluster.aws_eks_dev.name
+
+    node_group_name = "aws_eks_worker nodes"
+
+    node_role_arn = aws_iam_role.node_group_role.arn
+
+    subnet_ids = [aws_subnet.nirmal_pubsubnet.id]
+
+    scaling_config {
+      desired_size = 2
+      min_size = 2
+
+      max_size = 6
+
+    }
+
+    instance_types = ["t3.medium"]
+}
+
+##########AWS_EKS_CLUSTER##################
+
+resource "aws_eks_cluster" "aws_eks_dev" {
+
+    name = "aws_eks"
+
+    role_arn = aws_iam_role.aws_eks_cluster.arn
+
+    vpc_config {
+     subnet_ids = [aws_subnet.nirmal_pubsubnet.id]
+    
+     security_group_ids = [aws_security_group.nirmal_sg.id]
+
+  
+}
 
 }
 
+########AWS_CNI##########
 
-resource "aws_instance" "ec2_instance" {
+resource "aws_iam_role_policy_attachment" "cni" {
 
-  ami = var.ami_id
-
-  instance_type = var.instance_type
-
-  key_name = var.key_name
-
-  subnet_id = aws_subnet.nirmal_pubsubnet.id
-
-  vpc_security_group_ids = [aws_security_group.nirmal_sg.id]
+ role = aws_iam_role.node_group_role.name
 
 
-
-  tags = {
-
-    Name = "ec2_instance"
-
-  }
-
+ policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"   
+  
 }
 
-output "aws_ec2_ip" {
 
-    value = aws_instance.nirmal_instance.public_ip
+##########AWS_ECR############
+resource "aws_iam_role_policy_attachment" "ecr" {
+
+    role = aws_iam_role.node_group_role.name
+
+    policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+  
 }
-
 
